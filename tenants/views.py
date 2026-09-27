@@ -106,12 +106,26 @@ def public_home(request):
 
             elapsed = time.monotonic() - t0
 
-            # Use the same domain format for the success message
-            access_host = domain_name
+            # Build a friendly access URL. Omit the port for standard HTTP/HTTPS.
+            scheme = request.scheme or "http"
+            port = request.get_port() or "80"
+            # If standard port for scheme, don't show it. In production (DEBUG=False)
+            # prefer omitting non-standard ports too (served behind proxies/load-balancers).
+            show_port = True
+            if (scheme == "http" and port == "80") or (scheme == "https" and port == "443"):
+                show_port = False
+            if not settings.DEBUG:
+                show_port = False
+
+            if show_port:
+                access_url = f"{scheme}://{domain_name}:{port}/"
+            else:
+                access_url = f"{scheme}://{domain_name}/"
+
             messages.success(
                 request,
                 f"Tenant '{cd['restaurant_name']}' created in {elapsed:.1f}s! "
-                f"Access: http://{access_host}:8000/ "
+                f"Access: {access_url} "
                 f"(login: {cd['admin_username']})",
             )
             return redirect("public-home")
