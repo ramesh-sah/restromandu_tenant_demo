@@ -6,7 +6,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-only-secret-key-change-in-production")
-DEBUG = os.getenv("DEBUG", "True").lower() == "true"
+# Default to False for safety in production; set DEBUG=True explicitly for local dev.
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
 ALLOWED_HOSTS = [
     h.strip()
@@ -87,6 +88,8 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
+from django.core.exceptions import ImproperlyConfigured
+
 # Password Validation (enabled in production when DEBUG=False)
 if not DEBUG:
     AUTH_PASSWORD_VALIDATORS = [
@@ -95,8 +98,22 @@ if not DEBUG:
         {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
         {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
     ]
+    # Safety check: require a real SECRET_KEY in production
+    if not SECRET_KEY or SECRET_KEY == "dev-only-secret-key-change-in-production":
+        raise ImproperlyConfigured("SECRET_KEY must be set to a secure value when DEBUG=False")
 else:
     AUTH_PASSWORD_VALIDATORS = []
+
+# Production security defaults (only applied when DEBUG is False)
+if not DEBUG:
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Asia/Kathmandu"
