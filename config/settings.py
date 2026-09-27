@@ -60,6 +60,8 @@ PUBLIC_SCHEMA_URLCONF = "config.urls_public"
 MIDDLEWARE = [
     "django_tenants.middleware.main.TenantMainMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    # WhiteNoise serves static files efficiently in production
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -123,6 +125,9 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+# Use WhiteNoise for static file serving in production
+if not DEBUG:
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LOGIN_URL = "/login/"
@@ -140,3 +145,31 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 TENANT_DOMAIN_BASE = os.getenv("TENANT_DOMAIN_BASE", "localhost")
 # Optional single public tenant domain (if set, maps to public schema)
 PUBLIC_TENANT_DOMAIN = os.getenv("PUBLIC_TENANT_DOMAIN", "")
+
+# Ensure ALLOWED_HOSTS includes tenant domains and public domain
+if PUBLIC_TENANT_DOMAIN:
+    if PUBLIC_TENANT_DOMAIN not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(PUBLIC_TENANT_DOMAIN)
+
+# Allow subdomains for TENANT_DOMAIN_BASE, and the base itself
+base = TENANT_DOMAIN_BASE.lstrip('.') if TENANT_DOMAIN_BASE else ''
+if base:
+    wildcard = f".{base}"
+    if wildcard not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(wildcard)
+    if base not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(base)
+
+# Basic production logging
+if not DEBUG:
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "standard": {"format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"}
+        },
+        "handlers": {
+            "console": {"class": "logging.StreamHandler", "formatter": "standard"}
+        },
+        "root": {"handlers": ["console"], "level": "INFO"},
+    }
