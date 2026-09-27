@@ -23,19 +23,9 @@ def _get_all_schema_usage():
     """
     Returns a dict mapping schema_name -> {
         'used_bytes': int,
-        'used_pretty': str
-    } for ALL schemas in 1 SQL query.
-    """
-    usage = {}
-    try:
-        cursor = connection.cursor()
-        cursor.execute("""
-            SELECT
-                table_schema,
-                COALESCE(sum(pg_total_relation_size(quote_ident(table_schema) || '.' || quote_ident(table_name))), 0) AS raw_bytes,
-                pg_size_pretty(COALESCE(sum(pg_total_relation_size(quote_ident(table_schema) || '.' || quote_ident(table_name))), 0)) AS pretty_size
-            FROM information_schema.tables
-            WHERE table_schema NOT IN ('information_schema', 'pg_catalog', 'pg_toast')
+            # Always hide port in both dev and prod; show canonical domain only
+            t.access_url = f"{scheme}://{domain_name}/"
+            t.display_host = domain_name
             GROUP BY table_schema;
         """)
         for schema, raw_bytes, pretty_size in cursor.fetchall():
