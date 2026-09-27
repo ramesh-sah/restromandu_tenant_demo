@@ -1,0 +1,25 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: ${CONTAINER_NAME:-restromanduerp5}
+
+    env_file:
+      - .env
+
+    expose:
+      - "8000"
+
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+      - sqlite_data:/app/data
+
+    restart: unless-stopped
+
+volumes:
+  static_volume:
+  media_volume:
+  sqlite_data:
