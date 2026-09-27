@@ -153,6 +153,10 @@ if PUBLIC_TENANT_DOMAIN:
 
 # Allow subdomains for TENANT_DOMAIN_BASE, and the base itself
 base = TENANT_DOMAIN_BASE.lstrip('.') if TENANT_DOMAIN_BASE else ''
+# If the configured base used a two-level namespace like 'tenants.restromandu.com',
+# normalize to the root domain so ALLOWED_HOSTS includes '*.restromandu.com'.
+if base.startswith('tenants.'):
+    base = base.split('.', 1)[1]
 if base:
     wildcard = f".{base}"
     if wildcard not in ALLOWED_HOSTS:

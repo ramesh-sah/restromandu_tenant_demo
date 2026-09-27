@@ -99,8 +99,13 @@ def public_home(request):
             )
             cursor.close()
 
-            # Build the tenant domain using the configured base domain from settings
+            # Build the tenant domain using the configured base domain from settings.
+            # If the base was configured as a two-level like "tenants.restromandu.com",
+            # strip the leading "tenants." so we create one-level subdomains
+            # (e.g. "xyz.restromandu.com").
             domain_base = getattr(settings, "TENANT_DOMAIN_BASE", "localhost") or "localhost"
+            if domain_base.startswith("tenants."):
+                domain_base = domain_base.split(".", 1)[1]
             domain_name = f"{cd['subdomain']}.{domain_base}"
             Domain.objects.create(
                 domain=domain_name,
