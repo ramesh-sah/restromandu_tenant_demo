@@ -122,12 +122,18 @@ TIME_ZONE = "Asia/Kathmandu"
 USE_I18N = True
 USE_TZ = True
 
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 # Use WhiteNoise for static file serving in production
 if not DEBUG:
-    STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
+    STORAGES = {
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
+    }
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LOGIN_URL = "/login/"
@@ -139,6 +145,7 @@ SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True
 
 # Tenant domain configuration
 # Base domain used for tenant subdomains (e.g. 'localhost' -> subdomain.localhost)
@@ -163,6 +170,11 @@ if base:
         ALLOWED_HOSTS.append(wildcard)
     if base not in ALLOWED_HOSTS:
         ALLOWED_HOSTS.append(base)
+
+CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in CSRF_TRUSTED_ORIGINS if o.strip()]
+if not CSRF_TRUSTED_ORIGINS and base:
+    CSRF_TRUSTED_ORIGINS = [f"http://*.{base}", f"https://*.{base}", f"http://{base}", f"https://{base}"]
 
 # Basic production logging
 if not DEBUG:

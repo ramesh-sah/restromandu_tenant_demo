@@ -1,0 +1,14 @@
+venv/
+staticfiles/
+media/
+data/
+.git/
+.gitignore
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.env.local
+.vscode/
+.idea/

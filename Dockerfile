@@ -7,7 +7,6 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y \
     pkg-config \
-    default-libmysqlclient-dev \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
@@ -22,4 +21,4 @@ RUN mkdir -p /app/static /app/staticfiles /app/media /app/data
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "python manage.py migrate_schemas --shared --noinput && python manage.py ensure_template_schema && python manage.py collectstatic --noinput && exec gunicorn config.asgi:application -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --workers 3 --timeout 120"]
+CMD ["sh", "-c", "python manage.py migrate_schemas --shared --noinput && python manage.py ensure_template_schema && python manage.py migrate_schemas --tenant --noinput && python manage.py collectstatic --noinput && exec gunicorn config.asgi:application -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --workers 3 --timeout 120"]
