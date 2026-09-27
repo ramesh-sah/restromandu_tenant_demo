@@ -1,0 +1,29 @@
+{% extends "accounts/base.html" %}
+{% block content %}
+<h1>{{ request.tenant.name }}</h1>
+<p><strong>Current schema:</strong> {{ schema }}</p>
+<p>Products: {{ products_count }}</p>
+<p>Orders: {{ orders_count }}</p>
+
+{% if storage %}
+<hr style="margin: 1.5rem 0; border: none; border-top: 1px solid #dee2e6;">
+<h3>💾 Database Storage Usage</h3>
+<p>
+  <strong>Used:</strong> {{ storage.used_pretty }} / {{ storage.quota_pretty }} (1 GB Quota)
+  <span style="color: {% if storage.is_over_quota %}red{% else %}#155724{% endif %}; font-weight: bold;">
+    ({{ storage.percent_used }}%)
+  </span>
+</p>
+
+<!-- Progress Bar -->
+<div style="background: #e9ecef; border-radius: 8px; height: 20px; width: 100%; max-width: 400px; margin-top: 0.5rem; overflow: hidden; border: 1px solid #ced4da;">
+  <div style="background: {% if storage.is_over_quota %}#dc3545{% elif storage.percent_used > 80 %}#ffc107{% else %}#28a745{% endif %}; height: 100%; width: {{ storage.percent_used|default:0.1 }}%; min-width: 4px; transition: width 0.3s;"></div>
+</div>
+
+{% if storage.is_over_quota %}
+<p style="color: #dc3545; font-weight: bold; margin-top: 0.5rem;">⚠️ Storage quota exceeded! Please upgrade your plan.</p>
+{% endif %}
+{% endif %}
+
+<p style="margin-top: 1.5rem; color: #6c757d; font-size: 0.9rem;">This page is reading only the current tenant schema.</p>
+{% endblock %}

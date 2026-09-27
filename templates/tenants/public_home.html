@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RestroMandu SaaS — Create Your Restaurant</title>
+<style>
+  :root {
+    --bg: #f8f9fa; --surface: #fff; --text: #1a1a2e; --muted: #6c757d;
+    --primary: #e63946; --primary-hover: #c1121f; --border: #dee2e6;
+    --success-bg: #d4edda; --success-text: #155724;
+    --error-bg: #f8d7da; --error-text: #721c24;
+    --accent: #457b9d;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+  .header { background: var(--primary); color: #fff; padding: 2rem 1rem; text-align: center; }
+  .header h1 { font-size: 2rem; font-weight: 700; }
+  .header p { opacity: 0.9; margin-top: 0.25rem; }
+
+  .container { max-width: 960px; margin: 0 auto; padding: 2rem 1rem; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; }
+  @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+
+  .card { background: var(--surface); border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.1); padding: 1.5rem; }
+  .card h2 { font-size: 1.25rem; margin-bottom: 1rem; color: var(--primary); border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; }
+
+  .form-group { margin-bottom: 1rem; }
+  .form-group label { display: block; font-weight: 600; margin-bottom: 0.25rem; font-size: 0.9rem; }
+  .form-input { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.95rem; transition: border-color 0.2s; }
+  .form-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(230,57,70,.15); }
+  .helptext { font-size: 0.8rem; color: var(--muted); margin-top: 0.2rem; }
+  .errorlist { list-style: none; color: var(--error-text); font-size: 0.85rem; margin-top: 0.2rem; }
+
+  .btn { display: inline-block; padding: 0.65rem 1.5rem; border: none; border-radius: 4px; font-size: 1rem; font-weight: 600; cursor: pointer; text-decoration: none; transition: background 0.2s; }
+  .btn-primary { background: var(--primary); color: #fff; width: 100%; }
+  .btn-primary:hover { background: var(--primary-hover); }
+
+  .messages { margin-bottom: 1.5rem; }
+  .msg { padding: 0.75rem 1rem; border-radius: 4px; margin-bottom: 0.5rem; font-size: 0.95rem; }
+  .msg-success { background: var(--success-bg); color: var(--success-text); }
+  .msg-error { background: var(--error-bg); color: var(--error-text); }
+
+  .tenant-list { list-style: none; }
+  .tenant-item { padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
+  .tenant-item:last-child { border-bottom: none; }
+  .tenant-header { display: flex; justify-content: space-between; align-items: center; }
+  .tenant-name { font-weight: 600; }
+  .tenant-domain { font-size: 0.85rem; color: var(--accent); }
+  .tenant-badge { font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 12px; background: #d4edda; color: #155724; }
+  .tenant-badge.inactive { background: var(--error-bg); color: var(--error-text); }
+  .tenant-badge.quota-exceeded { background: var(--error-bg); color: var(--error-text); }
+
+  .progress-bar-bg { background: #e9ecef; border-radius: 4px; height: 8px; width: 100%; margin-top: 0.4rem; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: #28a745; transition: width 0.3s; min-width: 2px; }
+  .progress-bar-fill.warn { background: #ffc107; }
+  .progress-bar-fill.danger { background: #dc3545; }
+
+  .empty { text-align: center; color: var(--muted); padding: 2rem 0; }
+  .admin-link { display: inline-block; margin-top: 1rem; font-size: 0.9rem; color: var(--accent); text-decoration: underline; }
+  .section-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 0.5rem; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🍽️ RestroMandu SaaS</h1>
+  <p>Multi-tenant Restaurant Management Platform</p>
+</div>
+
+<div class="container">
+
+  {% if messages %}
+  <div class="messages">
+    {% for msg in messages %}
+    <div class="msg {% if msg.tags %}msg-{{ msg.tags }}{% endif %}">{{ msg }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="grid">
+
+    <!-- Create Tenant Form -->
+    <div class="card">
+      <h2>🚀 Create New Restaurant</h2>
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        <p class="section-title">Restaurant Info</p>
+
+        <div class="form-group">
+          <label for="id_restaurant_name">Restaurant Name</label>
+          {{ form.restaurant_name }}
+          {% if form.restaurant_name.errors %}<ul class="errorlist">{% for e in form.restaurant_name.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="id_subdomain">Subdomain</label>
+          {{ form.subdomain }}
+          {% if form.subdomain.help_text %}<p class="helptext">{{ form.subdomain.help_text }}</p>{% endif %}
+          {% if form.subdomain.errors %}<ul class="errorlist">{% for e in form.subdomain.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+
+        <p class="section-title" style="margin-top:1.25rem">Admin Account</p>
+
+        <div class="form-group">
+          <label for="id_admin_username">Username</label>
+          {{ form.admin_username }}
+          {% if form.admin_username.errors %}<ul class="errorlist">{% for e in form.admin_username.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="id_admin_email">Email <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+          {{ form.admin_email }}
+          {% if form.admin_email.errors %}<ul class="errorlist">{% for e in form.admin_email.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="id_admin_password">Password</label>
+          {{ form.admin_password }}
+          {% if form.admin_password.errors %}<ul class="errorlist">{% for e in form.admin_password.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="id_admin_password_confirm">Confirm Password</label>
+          {{ form.admin_password_confirm }}
+          {% if form.admin_password_confirm.errors %}<ul class="errorlist">{% for e in form.admin_password_confirm.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+
+        <button type="submit" class="btn btn-primary">Create Restaurant</button>
+      </form>
+
+      <a href="/admin/" class="admin-link">🔑 Public Admin Panel</a>
+    </div>
+
+    <!-- Existing Tenants -->
+    <div class="card">
+      <h2>📋 Existing Restaurants <span style="font-size:0.8rem;font-weight:400;color:var(--muted);float:right">Control Plane: {{ public_storage }}</span></h2>
+
+      {% if tenants %}
+      <ul class="tenant-list">
+        {% for t in tenants %}
+        <li class="tenant-item">
+          <div class="tenant-header">
+            <div>
+              <span class="tenant-name">{{ t.name }}</span>
+              {% if t.primary_domain %}
+              <a class="tenant-domain" href="http://{{ t.primary_domain.domain }}:8000/" target="_blank">
+                {{ t.primary_domain.domain }}:8000 ↗
+              </a>
+              {% endif %}
+            </div>
+            <span class="tenant-badge {% if t.is_over_quota %}quota-exceeded{% elif not t.is_active %}inactive{% endif %}">
+              {% if t.is_over_quota %}Quota Exceeded{% elif t.is_active %}Active{% else %}Inactive{% endif %}
+            </span>
+          </div>
+
+          <!-- Storage Details -->
+          <div style="font-size:0.8rem;color:var(--muted);margin-top:0.25rem;">
+            Schema: <code>{{ t.schema_name }}</code> &bull; 💾 {{ t.used_pretty }} / {{ t.quota_gb }} GB ({{ t.percent_used }}%)
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill {% if t.is_over_quota %}danger{% elif t.percent_used > 80 %}warn{% endif %}" style="width: {{ t.percent_used|default:0.1 }}%;"></div>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="empty">
+        <p>No restaurants yet.</p>
+        <p style="font-size:0.85rem">Create one using the form!</p>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

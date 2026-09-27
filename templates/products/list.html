@@ -1,0 +1,6 @@
+{% extends "accounts/base.html" %}
+{% block content %}
+<h1>Products</h1>
+{% if perms.products.add_product %}<p><a href="/products/new/">Add product</a></p>{% endif %}
+<ul>{% for product in products %}<li>{{ product.name }} — {{ product.price }}</li>{% empty %}<li>No products.</li>{% endfor %}</ul>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "accounts/base.html" %}
+{% block content %}
+<h1>Orders</h1>
+<ul>
+{% for order in orders %}
+<li>{{ order.number }} — {{ order.product.name }} × {{ order.quantity }} — {{ order.status }} — {{ order.total }}
+{% if perms.orders.cancel_order and order.status != "CANCELLED" %}
+<form method="post" action="/orders/{{ order.pk }}/cancel/" style="display:inline">{% csrf_token %}<button>Cancel</button></form>
+{% endif %}
+</li>
+{% empty %}<li>No orders.</li>{% endfor %}
+</ul>
+{% endblock %}
