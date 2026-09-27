@@ -70,6 +70,26 @@ def public_home(request):
         t.quota_gb = round(t.quota_bytes / (1024 * 1024 * 1024), 2)
         t.percent_used = round((t.used_bytes / t.quota_bytes) * 100, 2) if t.quota_bytes else 0
         t.is_over_quota = t.used_bytes >= t.quota_bytes
+        # Prepare a friendly access URL and display host for each tenant
+        if t.primary_domain:
+            domain_name = t.primary_domain.domain
+            scheme = request.scheme or "http"
+            port = request.get_port() or "80"
+            show_port = True
+            if (scheme == "http" and port == "80") or (scheme == "https" and port == "443"):
+                show_port = False
+            if not settings.DEBUG:
+                show_port = False
+
+            if show_port:
+                t.access_url = f"{scheme}://{domain_name}:{port}/"
+                t.display_host = f"{domain_name}:{port}"
+            else:
+                t.access_url = f"{scheme}://{domain_name}/"
+                t.display_host = domain_name
+        else:
+            t.access_url = None
+            t.display_host = None
 
     if request.method == "POST":
         form = TenantCreateForm(request.POST)

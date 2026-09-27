@@ -148,8 +148,8 @@
             <div>
               <span class="tenant-name">{{ t.name }}</span>
               {% if t.primary_domain %}
-              <a class="tenant-domain" href="http://{{ t.primary_domain.domain }}:8000/" target="_blank">
-                {{ t.primary_domain.domain }}:8000 ↗
+              <a class="tenant-domain" href="{{ t.access_url }}" target="_blank">
+                {{ t.display_host }} ↗
               </a>
               {% endif %}
             </div>
