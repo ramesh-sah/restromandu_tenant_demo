@@ -10,7 +10,7 @@ services:
       - .env
 
     ports:
-      - "8000:8000"
+      - "8000"
 
     volumes:
       - static_volume:/app/staticfiles
