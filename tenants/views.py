@@ -74,19 +74,10 @@ def public_home(request):
         if t.primary_domain:
             domain_name = t.primary_domain.domain
             scheme = request.scheme or "http"
-            port = request.get_port() or "80"
-            show_port = True
-            if (scheme == "http" and port == "80") or (scheme == "https" and port == "443"):
-                show_port = False
-            if not settings.DEBUG:
-                show_port = False
-
-            if show_port:
-                t.access_url = f"{scheme}://{domain_name}:{port}/"
-                t.display_host = f"{domain_name}:{port}"
-            else:
-                t.access_url = f"{scheme}://{domain_name}/"
-                t.display_host = domain_name
+            # Always present canonical URLs without an explicit port so links work
+            # both in dev and production behind proxies or load balancers.
+            t.access_url = f"{scheme}://{domain_name}/"
+            t.display_host = domain_name
         else:
             t.access_url = None
             t.display_host = None
@@ -126,21 +117,10 @@ def public_home(request):
 
             elapsed = time.monotonic() - t0
 
-            # Build a friendly access URL. Omit the port for standard HTTP/HTTPS.
+            # Build a friendly access URL without explicit port so users see
+            # canonical tenant URLs (remove :8000 from dev and prod links).
             scheme = request.scheme or "http"
-            port = request.get_port() or "80"
-            # If standard port for scheme, don't show it. In production (DEBUG=False)
-            # prefer omitting non-standard ports too (served behind proxies/load-balancers).
-            show_port = True
-            if (scheme == "http" and port == "80") or (scheme == "https" and port == "443"):
-                show_port = False
-            if not settings.DEBUG:
-                show_port = False
-
-            if show_port:
-                access_url = f"{scheme}://{domain_name}:{port}/"
-            else:
-                access_url = f"{scheme}://{domain_name}/"
+            access_url = f"{scheme}://{domain_name}/"
 
             messages.success(
                 request,
