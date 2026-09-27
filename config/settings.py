@@ -134,3 +134,9 @@ SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# Tenant domain configuration
+# Base domain used for tenant subdomains (e.g. 'localhost' -> subdomain.localhost)
+TENANT_DOMAIN_BASE = os.getenv("TENANT_DOMAIN_BASE", "localhost")
+# Optional single public tenant domain (if set, maps to public schema)
+PUBLIC_TENANT_DOMAIN = os.getenv("PUBLIC_TENANT_DOMAIN", "")

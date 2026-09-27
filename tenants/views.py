@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.db import connection
+from django.conf import settings
 from django_tenants.utils import tenant_context
 from django_tenants.clone import CloneSchema
 from .models import Client, Domain, REFERENCE_SCHEMA
@@ -87,8 +88,11 @@ def public_home(request):
             )
             cursor.close()
 
+            # Build the tenant domain using the configured base domain from settings
+            domain_base = getattr(settings, "TENANT_DOMAIN_BASE", "localhost") or "localhost"
+            domain_name = f"{cd['subdomain']}.{domain_base}"
             Domain.objects.create(
-                domain=f"{cd['subdomain']}.localhost",
+                domain=domain_name,
                 tenant=tenant,
                 is_primary=True,
             )
@@ -102,10 +106,12 @@ def public_home(request):
 
             elapsed = time.monotonic() - t0
 
+            # Use the same domain format for the success message
+            access_host = domain_name
             messages.success(
                 request,
                 f"Tenant '{cd['restaurant_name']}' created in {elapsed:.1f}s! "
-                f"Access: http://{cd['subdomain']}.localhost:8000/ "
+                f"Access: http://{access_host}:8000/ "
                 f"(login: {cd['admin_username']})",
             )
             return redirect("public-home")
